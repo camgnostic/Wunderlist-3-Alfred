@@ -55,14 +55,23 @@ def getLists(wf, query=False, add=False):
                             valid=False, autocomplete=title + ":",
                             icon=ICON_LIST)
             else:
+                filter1 = lambda x,y: "" if x.lower() == y[0:len(x)].lower() else x
+                filter2 = lambda x,y: x if len(x) > len(y) else filter1(x, y)
                 wf.add_item(title=title, subtitle=u'Add new task',
-                            valid=False, autocomplete=u'Add: ' + title + ':' + query,
+                            valid=False,
+                            autocomplete=u'Add: ' + title + ':' + filter2(query, title),
                             icon=ICON_ADDTASK)
     if query != "" and add == False:
+        addquery = query
+        newquery = query
+        if len(query) < 5 and query.lower() == "add:"[0:len(query)]:
+            addquery = ""
+        if len(query) < 5 and query.lower() == "new:"[0:len(query)]:
+            newquery = ""
         wf.add_item(title = u'Add', subtitle = u'Add a new task to a list',
-                    valid=False, autocomplete="Add:" + query, icon=ICON_ADDTASK)
+                    valid=False, autocomplete="Add:" + addquery, icon=ICON_ADDTASK)
         wf.add_item(title = u'New', subtitle = u'New list',
-                    valid=False, autocomplete="New:" + query, icon=ICON_NEWLIST)
+                    valid=False, autocomplete="New:" + newquery, icon=ICON_NEWLIST)
     wf.send_feedback()
     return
 
@@ -99,6 +108,9 @@ def getTasks(wf, listId, listname, query):
     if len(all_tasks) != 1 or query != tasks[str(all_tasks[0])]['title']:
         valid = False if query == "" else True
         autocomplete = False if query != "" else u'Add: ' + listname + ':' + query
+        if len(query) <= len(listname) and len(query) > 0:
+            if query.lower().rstrip(":").rstrip(' ') == listname.lower()[0:len(query)]:
+                autocomplete = listname + ':'
         wf.add_item(title=u'Add:' + query, subtitle=u'Add a new task to list ' + listname,
                      valid=valid, arg = u'add:' + str(listId) + ":" + query,
                      autocomplete=autocomplete, icon=ICON_ADDTASK)
